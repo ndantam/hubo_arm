@@ -40,6 +40,8 @@
 #ifndef HUBO_ARM_H
 #define HUBO_ARM_H
 
-void hubo_arm_kin_( const double *q, double *R, double *v, double *J );
+void hubo_kin_arm_( const double *q, double *R, double *v, double *J );
+
+void hubo_kin_leg_( const double *q, double *R, double *v, double *J );
 
 #endif // HUBO_ARM_H

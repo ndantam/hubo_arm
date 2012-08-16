@@ -40,15 +40,20 @@
 load("/usr/share/amino/amino.mac");
 
 
-T01 :  tf_roty(q(1));
-T12 :  tf_rotx(q(2));
-T23 :  tf_tran(0, 0, -.17914) . tf_rotz(q(3)) ;
-T34 :  tf_roty(q(4));
-T45 :  tf_tran(0, 0, -.18159) . tf_rotz(q(5)) ;
-T56 :  tf_roty(q(6));
+/*******/
+/* ARM */
+/*******/
 
-TT : [T01, T12, T23, T34, T45, T56]$
-TA : [
+TT_arm : [
+tf_roty(q(1)),
+tf_rotx(q(2)),
+tf_rotz(q(3)) . tf_tran(0, 0, -.17914),
+tf_roty(q(4)),
+tf_rotz(q(5)) . tf_tran(0, 0, -.18159),
+tf_roty(q(6))
+]$
+
+TA_arm : [
 [0,1,0,0], /* 01 */
 [1,0,0,0], /* 12 */
 [0,0,1,0], /* 23 */
@@ -57,30 +62,73 @@ TA : [
 [0,1,0,0]  /* 56 */
 ]$
 
-TP : tf_pyramid(TT)$
-
 TFee : matrix(
   [1, 0, 0, 0],
   [0, 1, 0, 0],
   [0, 0, 1, 0],
   [0, 0, 0, 1] );
 
-tf_e : last(TP) . TFee$
+tf_arm : last(tf_pyramid(TT_arm)) . TFee$
 
-J : spatial_jacobian( TT, TA, TFee);
+J_arm : spatial_jacobian( TT_arm, TA_arm, TFee)$
+
+/*******/
+/* Leg */
+/*******/
+
+TT_leg : [
+tf_rotz(q(1)),
+tf_rotx(q(2)),
+tf_roty(q(3)),
+tf_tran(0, 0, -.30003) . tf_roty(q(4)),
+tf_tran(0, 0, -.30038) . tf_roty(q(5)),
+tf_rotx(q(6)) . tf_tran(0, 0, -.09407)
+]$
+
+TA_leg : [
+[0,0,1,0], /* 01 */
+[1,0,0,0], /* 12 */
+[0,1,0,0], /* 23 */
+[0,1,0,0], /* 34 */
+[0,1,0,0], /* 45 */
+[1,0,0,0]  /* 56 */
+]$
+
+TFfoot : matrix(
+  [1, 0, 0, 0],
+  [0, 1, 0, 0],
+  [0, 0, 1, 0],
+  [0, 0, 0, 1] );
+
+tf_leg : last(tf_pyramid(TT_leg)) . TFfoot$
+
+J_leg : spatial_jacobian( TT_leg, TA_leg, TFfoot)$
+
+/************/
+/* Code Gen */
+/************/
 
 with_stdout("hubo_kin.f",
-  /* FK */
-  print("      Subroutine hubo_arm_kin (q, R, v, J)"),
+  print("      Subroutine hubo_kin_arm (q, R, v, J)"),
   print("      Double Precision q(6)"),
   print("      Double Precision R(3,3)"),
   print("      Double Precision v(3,1)"),
   print("      Double Precision J(6,6)"),
-  fortran( 'R = submatrix( 4, tf_e, 4 ) ),
-  fortran( 'v = submatrix( 4, tf_e, 1, 2, 3 ) ),
-  fortran( 'J = J ),
+  fortran( 'R = submatrix( 4, tf_arm, 4 ) ),
+  fortran( 'v = submatrix( 4, tf_arm, 1, 2, 3 ) ),
+  fortran( 'J = J_arm ),
+  print("      Return"),
+  print("      End"),
+  print("      Subroutine hubo_kin_leg (q, R, v, J)"),
+  print("      Double Precision q(6)"),
+  print("      Double Precision R(3,3)"),
+  print("      Double Precision v(3,1)"),
+  print("      Double Precision J(6,6)"),
+  fortran( 'R = submatrix( 4, tf_leg, 4 ) ),
+  fortran( 'v = submatrix( 4, tf_leg, 1, 2, 3 ) ),
+  fortran( 'J = J_leg ),
   print("      Return"),
   print("      End")
-
 );
+
 

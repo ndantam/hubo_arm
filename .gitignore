@@ -6,6 +6,7 @@
 *.lo
 *.la
 *.Po
+*.Plo
 *.tar.gz
 depcomp
 harmctrl
@@ -23,3 +24,4 @@ harmctrl
 /stamp-h1
 /act.dat
 /ref.dat
+/hlegctrl

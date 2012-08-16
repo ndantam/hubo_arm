@@ -3,7 +3,7 @@ AC_PREREQ([2.65])
 AC_INIT([huboarm], [0.20120807], [ntd@gatech.edu])
 AM_INIT_AUTOMAKE
 
-AC_CONFIG_SRCDIR([include/hubo_arm.h])
+AC_CONFIG_SRCDIR([include/hubo_kin.h])
 AC_CONFIG_HEADERS([config.h])
 
 
@@ -49,7 +49,11 @@ AC_SEARCH_LIBS([clock_gettime],[rt])
 AC_SEARCH_LIBS([aa_la_dls],[amino], [true], [echo "Failed: need amino library" && exit 1])
 AC_SEARCH_LIBS([rfx_ctrl_ws_lin_k_init],[reflex], [true], [echo "Failed: need reflex library" && exit 1])
 
-AC_CHECK_FUNCS([clock_gettime memset pow sqrt sincos])
+AC_SEARCH_LIBS([ach_open],[ach], [true], [echo "Failed: need ach library" && exit 1])
+
+
+AC_CHECK_FUNCS([clock_gettime memset pow sqrt sincos achopen])
+
 
 # Check for thread local storage
 AX_TLS

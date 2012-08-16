@@ -45,9 +45,9 @@
 #include "config.h"
 #include "hubo_kin.h"
 
-void hubo_arm_kin( rfx_ctrl_ws_t *G ) {
+void hubo_leg_kin( rfx_ctrl_ws_t *G ) {
     double T[12];
-    hubo_kin_arm_(G->q, T, T+9, G->J);
+    hubo_kin_leg_(G->q, T, T+9, G->J);
     memcpy( G->x, T+9, sizeof(G->x) );
     aa_tf_rotmat2quat( T, G->r );
 }
@@ -63,11 +63,17 @@ int main( int argc, char **argv ) {
     rfx_ctrl_ws_lin_k_init( &K, 6 );
 
     // init position
-    G.q[0] = -M_PI_2;
-    G.q[3] = -M_PI_2;
-    hubo_arm_kin( &G );
+    //memcpy( G.q, (double[]){0,0,-M_PI_2,0,0,0}, 6*sizeof(double) );
+    memcpy( G.q, (double[]){-M_PI_2,0,-M_PI_2,M_PI_2,0,0}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_mat(stdout, G.J, 6, 6);
     memcpy(G.r_r, G.r, sizeof(G.r));
+    double x0[3];
+    memcpy( x0, G.x, sizeof(x0) );
 
+
+    //aa_dump_vec(stdout, G.x, 3);
+    // gains
     K.dls = .005;
     for( size_t i = 0; i < 6; i ++ ) {
         G.q_min[i] = -6*M_PI;
@@ -80,9 +86,6 @@ int main( int argc, char **argv ) {
         G.x_min[i] = -10;
         G.x_max[i] = 10;
     }
-
-    double x0[3];
-    memcpy( x0, G.x, sizeof(x0) );
 
     FILE *f_ref = fopen("ref.dat", "w");
     FILE *f_act = fopen("act.dat", "w");
@@ -108,7 +111,7 @@ int main( int argc, char **argv ) {
         }
 
         // update kinematics
-        hubo_arm_kin( &G );
+        hubo_leg_kin( &G );
 
         printf("%f r:\t", t);
         aa_dump_vec(stdout, G.x_r, 3 );
@@ -125,25 +128,48 @@ int main( int argc, char **argv ) {
     fclose(f_ref);
     fclose(f_act);
 
-    /* hubo_arm_kin( (double[]){0,0,0,0,0,0}, T, J ); */
 
-    /* // print some test positions to check the FK */
-    /* printf("down\n"); */
-    /* aa_dump_mat(stdout, T, 3, 4 ); */
+    // print some test positions to check the FK
+    printf("down\n");
+    memcpy( G.q, (double[]){0,0,0,0,0,0}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_vec(stdout, G.x, 3 );
 
-    /* printf("forward\n"); */
-    /* hubo_arm_kin( (double[]){-M_PI_2,0,0,0,0,0}, T, J ); */
-    /* aa_dump_mat(stdout, T, 3, 4 ); */
+    printf("forward\n");
+    memcpy( G.q, (double[]){0,0,-M_PI_2,0,0,0}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_vec(stdout, G.x, 3 );
 
-    /* printf("right\n"); */
-    /* hubo_arm_kin( (double[]){0,-M_PI_2,0,0,0,0}, T, J ); */
-    /* aa_dump_mat(stdout, T, 3, 4 ); */
+    printf("right\n");
+    memcpy( G.q, (double[]){0,-M_PI_2,0,0,0,0}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_vec(stdout, G.x, 3 );
+
+    printf("right-hip\n");
+    memcpy( G.q, (double[]){-M_PI_2,0,-M_PI_2,0,0,0}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_vec(stdout, G.x, 3 );
+
+    printf("forward-knee\n");
+    memcpy( G.q, (double[]){0,0,0,-M_PI_2,0,0}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_vec(stdout, G.x, 3 );
+
+    printf("ankle-forward\n");
+    memcpy( G.q, (double[]){0,0,0,0,M_PI_2,0}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_vec(stdout, G.x, 3 );
+
+    printf("ankle-right\n");
+    memcpy( G.q, (double[]){0,0,0,0,0,-M_PI_2}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_vec(stdout, G.x, 3 );
 
 
-    /* printf("forward-elbow\n"); */
-    /* hubo_arm_kin( (double[]){0,0,0,-M_PI_2,0,0}, T, J ); */
-    /* aa_dump_mat(stdout, T, 3, 4 ); */
-
+    printf("captain-morgan\n");
+    memcpy( G.q, (double[]){-M_PI_2,0,-M_PI_2,M_PI_2,0,0}, 6*sizeof(double) );
+    hubo_leg_kin( &G );
+    aa_dump_vec(stdout, G.x, 3 );
 
     /* printf("out-elbow\n"); */
     /* hubo_arm_kin( (double[]){0,0,-M_PI_2,-M_PI_2,0,0}, T, J ); */
